@@ -1,21 +1,18 @@
 package main
 
 import (
+	"log"
 	"net/http"
-	"waas/action"
+	controller "waas/Controller"
 )
 
 func main() {
-	mux := http.NewServeMux()
+	mux := controller.Route()
+	log.Println("Server starting ...")
+	err := http.ListenAndServe(":8080", mux)
+	if err != nil {
+		log.Println("Cannot start server:", err)
+		return
+	}
 
-	mux.HandleFunc("/register", action.Register)
-	mux.HandleFunc("/get", action.Get)
-	mux.HandleFunc("/addWallet", action.AddWallet)
-	mux.HandleFunc("/credit", action.Credit)
-	mux.HandleFunc("/debit", action.Debit)
-	// mux.HandleFunc("/block", action.Block)
-	// mux.HandleFunc("/unblock", action.UnBlock)
-	// mux.HandleFunc("/generateCSV", action.GenerateCSV)
-
-	http.ListenAndServe(":8080", mux)
 }
