@@ -1,104 +1,71 @@
 package Controller
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
-	"strconv"
 	"waas/Domain"
 )
 
-func AddWallet(w http.ResponseWriter, r *http.Request) {
-	userId, ok := r.URL.Query()["user_id"]
-	if !ok || len(userId[0]) < 1 {
-		log.Println("Url Param 'user_id' is missing")
-		return
-	}
-	userIdNum, err := strconv.Atoi(userId[0])
-	if err != nil {
-		log.Println("User ID is not numeric!", err)
-		return
-	}
+func wallet(rw http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		// Fetch a wallet
 
-	go Domain.AddWallet(userIdNum)
+		wallet, err := Domain.GetWallet(rw, r)
+		if err != nil {
+			http.Error(rw, "Cannot fetch wallet", http.StatusInternalServerError)
+		}
+		json.NewEncoder(rw).Encode(wallet)
+	} else if r.Method == http.MethodPost {
+		// Add a new wallet
 
+		err := Domain.RegisterWallet(rw, r)
+		if err != nil {
+			http.Error(rw, "Cannot Regsiter wallet", http.StatusInternalServerError)
+			return
+		}
+		log.Println("Wallet Created")
+		rw.WriteHeader(http.StatusCreated)
+	} else {
+		// Catch undefined methods
+
+		http.Error(rw, "Method not implemented for wallet", http.StatusBadRequest)
+	}
 }
 
-func Credit(w http.ResponseWriter, r *http.Request) {
-	walletId, ok := r.URL.Query()["wallet_id"]
-	if !ok || len(walletId[0]) < 1 {
-		log.Println("Url Param 'walletId' is missing")
-		return
-	}
-	walletIdNum, err := strconv.Atoi(walletId[0])
-	if err != nil {
-		log.Println("walletId is not numeric!", err)
-		return
-	}
+func walletBalance(rw http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPatch {
+		updatedBalance, txnId, err := Domain.WalletBalance(rw, r)
+		if err != nil {
+			http.Error(rw, "Could not update wallet balance", http.StatusInternalServerError)
+			return
+		}
 
-	amount, ok := r.URL.Query()["amount"]
-	if !ok || len(amount[0]) < 1 {
-		log.Println("Url Param 'amount' is missing")
-		return
-	}
-	amountNum, err := strconv.ParseFloat(amount[0], 64)
-	if err != nil {
-		log.Println("User ID is not numeric!", err)
-		return
-	}
+		json.NewEncoder(rw).Encode(map[string]interface{}{
+			"updated_balance": updatedBalance,
+			"transaction_id":  txnId})
 
-	go Domain.Credit(walletIdNum, amountNum)
+		log.Println("Wallet balance updated")
+		rw.WriteHeader(http.StatusNoContent)
+	} else {
+		// Catch undefined methods
 
+		http.Error(rw, "Method not implemented for walletBalance", http.StatusBadRequest)
+	}
 }
 
-func Debit(w http.ResponseWriter, r *http.Request) {
-	walletId, ok := r.URL.Query()["wallet_id"]
-	if !ok || len(walletId[0]) < 1 {
-		log.Println("Url Param 'walletId' is missing")
-		return
-	}
-	walletIdNum, err := strconv.Atoi(walletId[0])
-	if err != nil {
-		log.Println("walletId is not numeric!", err)
-	}
+func walletStatus(rw http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPatch {
+		err := Domain.WalletStatus(rw, r)
+		if err != nil {
+			http.Error(rw, "Could not update wallet balance", http.StatusInternalServerError)
+			return
+		}
+		log.Println("Wallet status updated")
+		rw.WriteHeader(http.StatusNoContent)
+	} else {
+		// Catch undefined methods
 
-	amount, ok := r.URL.Query()["amount"]
-	if !ok || len(amount[0]) < 1 {
-		log.Println("Url Param 'amount' is missing")
-		return
+		http.Error(rw, "Method not implemented for walletBalance", http.StatusBadRequest)
 	}
-	amountNum, err := strconv.ParseFloat(amount[0], 64)
-	if err != nil {
-		log.Println("User ID is not numeric!", err)
-	}
-
-	go Domain.Debit(walletIdNum, amountNum)
-
-}
-
-func Block(w http.ResponseWriter, r *http.Request) {
-	walletId, ok := r.URL.Query()["wallet_id"]
-	if !ok || len(walletId[0]) < 1 {
-		log.Println("Url Param 'walletId' is missing")
-		return
-	}
-	walletIdNum, err := strconv.Atoi(walletId[0])
-	if err != nil {
-		log.Println("walletId is not numeric!", err)
-	}
-
-	go Domain.Block(walletIdNum)
-}
-
-func UnBlock(w http.ResponseWriter, r *http.Request) {
-	walletId, ok := r.URL.Query()["wallet_id"]
-	if !ok || len(walletId[0]) < 1 {
-		log.Println("Url Param 'walletId' is missing")
-		return
-	}
-	walletIdNum, err := strconv.Atoi(walletId[0])
-	if err != nil {
-		log.Println("walletId is not numeric!", err)
-	}
-
-	go Domain.UnBlock(walletIdNum)
 }

@@ -2,8 +2,12 @@
 ------
 
 ## TO DO
-- Implement wallet specific mutex to allow concurrent transaction
-- Use redis
+- Add validation of data in all insert APIs
+
+## Stack
+- gorrila-mux
+- gorm
+- ```Think something for dependency injection```
 
 ## Ideas
 - Should use worker for credit/debit? : Probably no, loss of sequence

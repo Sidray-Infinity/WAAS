@@ -1,6 +1,7 @@
 package Impl
 
 import (
+	"errors"
 	"log"
 	entity "waas/Model/entity"
 
@@ -8,20 +9,25 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-func Get() []entity.User {
-	// TEST APIs
-	db, _ := gorm.Open("mysql", address)
-	var users []entity.User
-	db.Find(&users)
-	db.DB().Close()
-	return users
+func GetUser(userId int) (*entity.User, error) {
+	var user entity.User
+	err = db.Find(&user, userId).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		log.Println("Record not found for User ID:", userId)
+		return nil, err
+	}
+	if err != nil {
+		log.Println("Cannot fetch user", err)
+		return nil, err
+	}
+
+	return &user, nil
 }
 
-func Register(newUser entity.User) {
-	db, _ := gorm.Open("mysql", address)
+func RegisterUser(newUser entity.User) error {
 	err = db.Create(&newUser).Error
 	if err != nil {
-		log.Println("Error while registering user:", err)
+		log.Println("Eror while registering user:", err)
 	}
-	db.DB().Close()
+	return err
 }

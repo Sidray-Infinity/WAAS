@@ -2,17 +2,19 @@ package Controller
 
 import (
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 func Route() http.Handler {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/get", Get)           // Test API
-	mux.HandleFunc("/register", Register) // Use restful resources
-	mux.HandleFunc("/addWallet", AddWallet)
-	mux.HandleFunc("/credit", Credit)
-	mux.HandleFunc("/debit", Debit)
-	mux.HandleFunc("/block", Block)
-	mux.HandleFunc("/unblock", UnBlock)
-	mux.HandleFunc("/generateCSV", GenerateCSV)
+	mux := mux.NewRouter()
+	mux.HandleFunc("/user/{id:[0-9]+}", user).Methods("GET")
+	mux.HandleFunc("/user", user).Methods("POST")
+	mux.HandleFunc("/wallet/{id:[0-9]+}", wallet).Methods("GET")
+	mux.HandleFunc("/wallet", wallet).Methods("POST")
+	mux.HandleFunc("/wallet/balance/{id:[0-9]+}", walletBalance).Methods("PATCH")
+	mux.HandleFunc("/wallet/status/{id:[0-9]+}", walletStatus).Methods("PATCH")
+	mux.HandleFunc("/generateCSV", generateCSV)
+
 	return mux
 }

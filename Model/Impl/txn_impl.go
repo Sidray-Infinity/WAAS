@@ -44,16 +44,13 @@ func GenerateCSV() {
 
 	writer := csv.NewWriter(file)
 	defer writer.Flush()
-
+	err = writer.Write([]string{"userid", "username", "txnid", "txntype", "amount"})
+	if err != nil {
+		log.Println("Cannot write headers to file", err)
+	}
 	var row []string
 	var txTypeMapper = map[bool]string{true: "Credit", false: "Debit"}
-	for idx, transaction := range transactions {
-		if idx == 0 {
-			err = writer.Write([]string{"userid", "username", "txnid", "txntype", "amount"})
-			if err != nil {
-				log.Println("Cannot write to file", err)
-			}
-		}
+	for _, transaction := range transactions {
 		row = []string{}
 		row = append(row, strconv.Itoa(transaction.Wallet.UserId))
 		row = append(row, transaction.Wallet.User.UserName)
@@ -62,7 +59,7 @@ func GenerateCSV() {
 		row = append(row, strconv.FormatFloat(transaction.Amount, 'f', 6, 64))
 		err = writer.Write(row)
 		if err != nil {
-			log.Println("Cannot write to file", err)
+			log.Println("Cannot write row to file", err)
 		}
 	}
 }

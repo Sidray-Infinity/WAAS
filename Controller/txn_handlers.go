@@ -5,6 +5,6 @@ import (
 	"waas/Domain"
 )
 
-func GenerateCSV(w http.ResponseWriter, r *http.Request) {
-	go Domain.GenerateCSV()
+func generateCSV(w http.ResponseWriter, r *http.Request) {
+	Domain.GenerateCSV()
 }

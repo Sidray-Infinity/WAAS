@@ -1,25 +1,42 @@
 package Domain
 
 import (
+	"encoding/json"
+	"log"
+	"net/http"
+	"strconv"
 	"waas/Model/Impl"
+	entity "waas/Model/entity"
+	"waas/Model/view"
+
+	"github.com/gorilla/mux"
 )
 
-func AddWallet(userId int) {
-	Impl.AddWallet(userId)
+func GetWallet(rw http.ResponseWriter, r *http.Request) (*entity.Wallet, error) {
+	userId, _ := strconv.Atoi(mux.Vars(r)["id"])
+	return Impl.GetWallet(userId)
 }
 
-func Credit(walletId int, amount float64) {
-	Impl.Credit(walletId, amount)
+func RegisterWallet(rw http.ResponseWriter, r *http.Request) error {
+	newWallet := &entity.Wallet{}
+	err := json.NewDecoder(r.Body).Decode(&newWallet)
+	if err != nil {
+		log.Println("Cannot decode JSON", err)
+		return err
+	}
+	return Impl.RegisterWallet(newWallet)
 }
 
-func Debit(walletId int, amount float64) {
-	Impl.Debit(walletId, amount)
+func WalletBalance(rw http.ResponseWriter, r *http.Request) (float64, int, error) {
+	updateReq := &view.BalanceUpdate{}
+	json.NewDecoder(r.Body).Decode(updateReq)
+	walletId, _ := strconv.Atoi(mux.Vars(r)["id"])
+	return Impl.WalletBalance(updateReq, walletId)
 }
 
-func Block(walletId int) {
-	Impl.Block(walletId)
-}
-
-func UnBlock(walletId int) {
-	Impl.UnBlock(walletId)
+func WalletStatus(rw http.ResponseWriter, r *http.Request) error {
+	updateReq := &view.StatusUpdate{}
+	json.NewDecoder(r.Body).Decode(updateReq)
+	walletId, _ := strconv.Atoi(mux.Vars(r)["id"])
+	return Impl.WalletStatus(updateReq, walletId)
 }

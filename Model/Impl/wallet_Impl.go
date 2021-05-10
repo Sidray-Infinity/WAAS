@@ -3,146 +3,95 @@ package Impl
 import (
 	"errors"
 	"log"
-	"sync"
 	"time"
 	entity "waas/Model/entity"
+	"waas/Model/view"
 
 	_ "github.com/go-sql-driver/mysql"
 
 	"github.com/jinzhu/gorm"
 )
 
-func AddWallet(userId int) {
-	db, _ := gorm.Open("mysql", address)
-	var user entity.User
-
-	err = db.First(&user, userId).Error
+func GetWallet(walletId int) (*entity.Wallet, error) {
+	wallet := &entity.Wallet{}
+	err = db.Preload("User").Find(&wallet, walletId).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		log.Println("Record not found for Wallet ID:", walletId)
+		return nil, err
+	}
 	if err != nil {
-		log.Println("Invalid User ID! ", err)
-		return
+		log.Println("Cannot fetch wallet", err)
+		return nil, err
 	}
 
-	var wallet entity.Wallet
-	wallet.User = user
-	err = db.Create(&wallet).Error
-	if err != nil {
-		log.Println("Error while adding wallet:", err)
-	}
-	db.DB().Close()
-
+	return wallet, nil
 }
 
-func Credit(walletId int, amount float64) {
-	db, _ := gorm.Open("mysql", address)
+func RegisterWallet(newWallet *entity.Wallet) error {
+	user, err := GetUser(newWallet.UserId)
+	if err != nil {
+		return err
+	}
 
-	var wallet entity.Wallet
+	newWallet.User = *user
+	err = db.Create(&newWallet).Error
+	if err != nil {
+		log.Println("Eror while registering wallet:", err)
+	}
+	return err
+}
+
+func WalletBalance(updateReq *view.BalanceUpdate, walletId int) (float64, int, error) {
+
 	var transaction entity.Transaction
-
-	err = db.First(&wallet, walletId).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		log.Println("Invalid Wallet Id")
-		return
+	wallet, err := GetWallet(walletId)
+	if err != nil {
+		return -1, -1, nil
 	}
 
 	if wallet.IsBlocked {
 		log.Println("Cannot transact on blocked wallets")
-		return
-	}
-	if walletMutx[walletId] == nil {
-		walletMutx[walletId] = &sync.Mutex{}
+		return -1, -1, err
 	}
 
-	walletMutx[walletId].Lock()
-	log.Println("CREDIT MUTEX:", walletId)
-	wallet.Balance += amount
+	if updateReq.UpdateType {
+		// Credit
+		transaction.Type = true
+		wallet.Balance += updateReq.UpdateAmount
+	} else {
+		// Debit
+		transaction.Type = false
+		wallet.Balance -= updateReq.UpdateAmount
+	}
+
+	err = db.Save(&wallet).Error
+	if err != nil {
+		log.Println("Cannot update wallet balance:", err)
+		return -1, -1, err
+	}
+
 	txTime := time.Now()
-	db.Save(&wallet)
-	// log.Println("---------------------------------SLEEPING", walletId)
-	time.Sleep(time.Second * 10)
-	// log.Println("---------------------------------DONE", walletId)
-	log.Println("DONE:", walletId)
-	walletMutx[walletId].Unlock()
-
-	transaction.Amount = amount
+	transaction.Amount = updateReq.UpdateAmount
 	transaction.Type = true
-	transaction.Wallet = wallet
+	transaction.Wallet = *wallet
 	transaction.Time = txTime
 
-	db.Create(&transaction)
+	err = db.Create(&transaction).Error
+	if err != nil {
+		log.Println("Cannot create transaction:", err)
+		return -1, -1, err
+	}
+	return wallet.Balance, transaction.ID, nil
 
-	db.DB().Close()
 }
 
-func Debit(walletId int, amount float64) {
-	db, _ := gorm.Open("mysql", address)
-	var wallet entity.Wallet
-	var transaction entity.Transaction
+func WalletStatus(updateReq *view.StatusUpdate, walletId int) error {
 
-	err = db.First(&wallet, walletId).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		log.Println("Invalid Wallet Id")
-		return
+	wallet, err := GetWallet(walletId)
+	if err != nil {
+		return err
 	}
-
-	if wallet.IsBlocked {
-		log.Println("Cannot transact on blocked wallets")
-		return
-	}
-
-	if wallet.Balance-amount < 0 {
-		log.Println("Balance too low for the given amount")
-		return
-	}
-
-	if walletMutx[walletId] == nil {
-		walletMutx[walletId] = &sync.Mutex{}
-	}
-
-	walletMutx[walletId].Lock()
-	log.Println("DEBIT MUTEX:", walletId)
-
-	wallet.Balance -= amount
-	txTime := time.Now()
-
+	wallet.IsBlocked = updateReq.NewStatus
 	db.Save(&wallet)
-	walletMutx[walletId].Unlock()
-
-	transaction.Amount = amount
-	transaction.Type = false
-	transaction.Wallet = wallet
-	transaction.Time = txTime
-
-	db.Create(&transaction)
-
-	db.DB().Close()
-}
-
-func Block(walletId int) {
-	db, _ := gorm.Open("mysql", address)
-
-	var wallet entity.Wallet
-	err = db.First(&wallet, walletId).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		log.Println("Invalid Wallet Id")
-		return
-	}
-
-	wallet.IsBlocked = true
-	db.Save(&wallet)
-	db.DB().Close()
-}
-
-func UnBlock(walletId int) {
-	db, _ := gorm.Open("mysql", address)
-
-	var wallet entity.Wallet
-	err = db.First(&wallet, walletId).Error
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		log.Println("Invalid Wallet Id")
-		return
-	}
-
-	wallet.IsBlocked = false
-	db.Save(&wallet)
-	db.DB().Close()
+	return nil
 }
