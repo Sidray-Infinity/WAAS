@@ -8,9 +8,6 @@ import (
 	"strings"
 	"time"
 	entity "waas/Model/entity"
-
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/jinzhu/gorm"
 )
 
 func GenerateCSV() {
@@ -23,7 +20,6 @@ func GenerateCSV() {
 
 	prevDate := currTime.AddDate(0, 0, -1)
 
-	db, _ := gorm.Open("mysql", address)
 	var transactions []entity.Transaction
 	db.Debug().Where("YEAR(`time`) = ?", prevDate.Year()).
 		Where("MONTH(`time`) = ?", int(prevDate.Month())).

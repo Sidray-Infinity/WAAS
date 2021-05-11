@@ -7,9 +7,7 @@ import (
 	entity "waas/Model/entity"
 	"waas/Model/view"
 
-	_ "github.com/go-sql-driver/mysql"
-
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 func GetWallet(walletId int) (*entity.Wallet, error) {
@@ -42,25 +40,29 @@ func RegisterWallet(newWallet *entity.Wallet) error {
 }
 
 func WalletBalance(updateReq *view.BalanceUpdate, walletId int) (float64, int, error) {
-
-	var transaction entity.Transaction
 	tx := db.Begin()
 	defer func() {
 		if r := recover(); r != nil {
 			tx.Rollback()
 		}
 	}()
+
 	if err := tx.Error; err != nil {
+		log.Println("Cannot start transaction:", err)
 		return -1, -1, err
 	}
 
-	wallet, err := GetWallet(walletId)
-	if err != nil {
-		return -1, -1, nil
-	}
+	var transaction entity.Transaction
+	var wallet entity.Wallet
 
-	if err := tx.Set("gorm:query_option", "FOR UPDATE").Error; err != nil {
-		tx.Rollback()
+	err = tx.Set("gorm:query_option", "FOR UPDATE").First(&wallet, walletId).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		log.Println("Record not found for Wallet ID:", walletId)
+		return -1, -1, err
+	}
+	if err != nil {
+		log.Println("Cannot fetch wallet", err)
 		return -1, -1, err
 	}
 
@@ -79,7 +81,7 @@ func WalletBalance(updateReq *view.BalanceUpdate, walletId int) (float64, int, e
 		wallet.Balance -= updateReq.UpdateAmount
 	}
 
-	err = db.Save(&wallet).Error
+	err = tx.Save(&wallet).Error
 	if err != nil {
 		log.Println("Cannot update wallet balance:", err)
 		return -1, -1, err
@@ -88,12 +90,17 @@ func WalletBalance(updateReq *view.BalanceUpdate, walletId int) (float64, int, e
 	txTime := time.Now()
 	transaction.Amount = updateReq.UpdateAmount
 	transaction.Type = true
-	transaction.Wallet = *wallet
+	transaction.Wallet = wallet
 	transaction.Time = txTime
 
-	err = db.Create(&transaction).Error
+	err = tx.Create(&transaction).Error
 	if err != nil {
 		log.Println("Cannot create transaction:", err)
+		return -1, -1, err
+	}
+	time.Sleep(20 * time.Second)
+	log.Println("--------------------DONE")
+	if err := tx.Commit().Error; err != nil {
 		return -1, -1, err
 	}
 	return wallet.Balance, transaction.ID, nil

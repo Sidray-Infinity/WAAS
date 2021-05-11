@@ -5,8 +5,7 @@ import (
 	"log"
 	entity "waas/Model/entity"
 
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 func GetUser(userId int) (*entity.User, error) {

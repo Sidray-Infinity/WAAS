@@ -8,8 +8,10 @@ import (
 
 func Route() http.Handler {
 	mux := mux.NewRouter()
+
 	mux.HandleFunc("/user/{id:[0-9]+}", userHandler).Methods("GET")
 	mux.HandleFunc("/user", userHandler).Methods("POST")
+
 	mux.HandleFunc("/wallet/{id:[0-9]+}", walletHandler).Methods("GET")
 	mux.HandleFunc("/wallet", walletHandler).Methods("POST")
 	mux.HandleFunc("/wallet/balance/{id:[0-9]+}", balanceHandler).Methods("PATCH")

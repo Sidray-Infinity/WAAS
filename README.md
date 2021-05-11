@@ -7,6 +7,7 @@
 - Return userid on registration
 - Is userId required while fetch wallet?
 - Handle concurrency
+- Status column in transaction
 
 ## Stack
 - gorrila-mux
