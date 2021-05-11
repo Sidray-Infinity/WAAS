@@ -6,7 +6,7 @@ import (
 	"waas/Domain"
 )
 
-func user(rw http.ResponseWriter, r *http.Request) {
+func userHandler(rw http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		user, err := Domain.GetUser(rw, r)
 		if err != nil {

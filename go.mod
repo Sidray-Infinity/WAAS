@@ -9,5 +9,4 @@ require (
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/jasonlvhit/gocron v0.0.1 // indirect
 	github.com/jinzhu/gorm v1.9.16
-	golang.org/x/tour v0.0.0-20210329144203-e4a37d30d6fc
 )

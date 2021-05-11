@@ -5,15 +5,16 @@ import (
 	"log"
 	"net/http"
 	"waas/Domain"
+	"waas/Model/view"
 )
 
-func wallet(rw http.ResponseWriter, r *http.Request) {
+func walletHandler(rw http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		// Fetch a wallet
 
 		wallet, err := Domain.GetWallet(rw, r)
 		if err != nil {
-			http.Error(rw, "Cannot fetch wallet", http.StatusInternalServerError)
+			http.Error(rw, "Cannot fetch wallet", http.StatusInternalServerError) // Error code should be decided at runtime
 		}
 		json.NewEncoder(rw).Encode(wallet)
 	} else if r.Method == http.MethodPost {
@@ -33,7 +34,7 @@ func wallet(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func walletBalance(rw http.ResponseWriter, r *http.Request) {
+func balanceHandler(rw http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPatch {
 		updatedBalance, txnId, err := Domain.WalletBalance(rw, r)
 		if err != nil {
@@ -41,12 +42,13 @@ func walletBalance(rw http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		json.NewEncoder(rw).Encode(map[string]interface{}{
-			"updated_balance": updatedBalance,
-			"transaction_id":  txnId})
+		var resp view.BalanceUpdateResp
+		resp.TransactionId = txnId
+		resp.UpdatedBalance = updatedBalance
+		json.NewEncoder(rw).Encode(resp)
 
 		log.Println("Wallet balance updated")
-		rw.WriteHeader(http.StatusNoContent)
+
 	} else {
 		// Catch undefined methods
 
@@ -54,7 +56,7 @@ func walletBalance(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func walletStatus(rw http.ResponseWriter, r *http.Request) {
+func statusHandler(rw http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPatch {
 		err := Domain.WalletStatus(rw, r)
 		if err != nil {

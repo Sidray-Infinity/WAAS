@@ -8,12 +8,12 @@ import (
 
 func Route() http.Handler {
 	mux := mux.NewRouter()
-	mux.HandleFunc("/user/{id:[0-9]+}", user).Methods("GET")
-	mux.HandleFunc("/user", user).Methods("POST")
-	mux.HandleFunc("/wallet/{id:[0-9]+}", wallet).Methods("GET")
-	mux.HandleFunc("/wallet", wallet).Methods("POST")
-	mux.HandleFunc("/wallet/balance/{id:[0-9]+}", walletBalance).Methods("PATCH")
-	mux.HandleFunc("/wallet/status/{id:[0-9]+}", walletStatus).Methods("PATCH")
+	mux.HandleFunc("/user/{id:[0-9]+}", userHandler).Methods("GET")
+	mux.HandleFunc("/user", userHandler).Methods("POST")
+	mux.HandleFunc("/wallet/{id:[0-9]+}", walletHandler).Methods("GET")
+	mux.HandleFunc("/wallet", walletHandler).Methods("POST")
+	mux.HandleFunc("/wallet/balance/{id:[0-9]+}", balanceHandler).Methods("PATCH")
+	mux.HandleFunc("/wallet/status/{id:[0-9]+}", statusHandler).Methods("PATCH")
 
 	return mux
 }

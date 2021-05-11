@@ -14,7 +14,7 @@ import (
 
 func GetWallet(walletId int) (*entity.Wallet, error) {
 	wallet := &entity.Wallet{}
-	err = db.Preload("User").Find(&wallet, walletId).Error
+	err = db.Find(&wallet, walletId).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		log.Println("Record not found for Wallet ID:", walletId)
 		return nil, err
@@ -44,9 +44,24 @@ func RegisterWallet(newWallet *entity.Wallet) error {
 func WalletBalance(updateReq *view.BalanceUpdate, walletId int) (float64, int, error) {
 
 	var transaction entity.Transaction
+	tx := db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+	if err := tx.Error; err != nil {
+		return -1, -1, err
+	}
+
 	wallet, err := GetWallet(walletId)
 	if err != nil {
 		return -1, -1, nil
+	}
+
+	if err := tx.Set("gorm:query_option", "FOR UPDATE").Error; err != nil {
+		tx.Rollback()
+		return -1, -1, err
 	}
 
 	if wallet.IsBlocked {

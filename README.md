@@ -3,6 +3,10 @@
 
 ## TO DO
 - Add validation of data in all insert APIs
+- Add status column in transaction table
+- Return userid on registration
+- Is userId required while fetch wallet?
+- Handle concurrency
 
 ## Stack
 - gorrila-mux

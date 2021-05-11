@@ -2,6 +2,7 @@ package Impl
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -21,5 +22,13 @@ func ConnnectToDB() {
 	if err != nil {
 		fmt.Println("Cannot Connect to DB", err)
 		os.Exit(0)
+	}
+}
+
+func CloseDB() {
+	if err = db.DB().Ping(); err != nil {
+		db.DB().Close()
+	} else {
+		log.Println("Cannot close DB Connection:", err)
 	}
 }
