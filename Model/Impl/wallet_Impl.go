@@ -54,6 +54,7 @@ func WalletBalance(updateReq *view.BalanceUpdate, walletId int) (float64, int, e
 
 	var transaction entity.Transaction
 	var wallet entity.Wallet
+	var isFailedTransaction bool = false
 
 	err = tx.Set("gorm:query_option", "FOR UPDATE").First(&wallet, walletId).Error
 
@@ -71,6 +72,18 @@ func WalletBalance(updateReq *view.BalanceUpdate, walletId int) (float64, int, e
 		return -1, -1, err
 	}
 
+	transaction.Amount = updateReq.UpdateAmount
+	transaction.Type = true
+	transaction.Wallet = wallet
+	transaction.Time = time.Now()
+	transaction.Status = "pending"
+
+	err = tx.Create(&transaction).Error
+	if err != nil {
+		log.Println("Cannot create transaction:", err)
+		return -1, -1, err
+	}
+
 	if updateReq.UpdateType {
 		// Credit
 		transaction.Type = true
@@ -84,22 +97,22 @@ func WalletBalance(updateReq *view.BalanceUpdate, walletId int) (float64, int, e
 	err = tx.Save(&wallet).Error
 	if err != nil {
 		log.Println("Cannot update wallet balance:", err)
-		return -1, -1, err
+		transaction.Status = "failed"
+		isFailedTransaction = true
+	} else {
+		transaction.Status = "completed"
 	}
 
-	txTime := time.Now()
-	transaction.Amount = updateReq.UpdateAmount
-	transaction.Type = true
-	transaction.Wallet = wallet
-	transaction.Time = txTime
-
-	err = tx.Create(&transaction).Error
+	err = tx.Save(&transaction).Error
 	if err != nil {
-		log.Println("Cannot create transaction:", err)
+		log.Println("Cannot update transaction:", err)
 		return -1, -1, err
 	}
-	time.Sleep(20 * time.Second)
-	log.Println("--------------------DONE")
+
+	if isFailedTransaction {
+		return -1, -1, err
+	}
+
 	if err := tx.Commit().Error; err != nil {
 		return -1, -1, err
 	}

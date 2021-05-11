@@ -8,5 +8,6 @@ type Transaction struct {
 	WalletId int       `json:"fk_wallet_id"`
 	Amount   float64   `json:"amount"`
 	Type     bool      `json:"type"`
-	Time     time.Time ` json:"time"`
+	Time     time.Time `json:"time"`
+	Status   string    `json:"status"`
 }
