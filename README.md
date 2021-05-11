@@ -8,6 +8,7 @@
 - Is userId required while fetch wallet?
 - Handle concurrency
 - Status column in transaction
+- Dependency Injection 
 
 ## Stack
 - gorrila-mux

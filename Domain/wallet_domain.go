@@ -31,6 +31,7 @@ func WalletBalance(rw http.ResponseWriter, r *http.Request) (float64, int, error
 	updateReq := &view.BalanceUpdate{}
 	json.NewDecoder(r.Body).Decode(updateReq)
 	walletId, _ := strconv.Atoi(mux.Vars(r)["id"])
+
 	return Impl.WalletBalance(updateReq, walletId)
 }
 

@@ -8,6 +8,7 @@ import (
 	"waas/Model/view"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 func GetWallet(walletId int) (*entity.Wallet, error) {
@@ -48,7 +49,7 @@ func WalletBalance(updateReq *view.BalanceUpdate, walletId int) (float64, int, e
 	}()
 
 	if err := tx.Error; err != nil {
-		log.Println("Cannot start transaction:", err)
+		log.Println("Cannot start DB transaction:", err)
 		return -1, -1, err
 	}
 
@@ -56,7 +57,11 @@ func WalletBalance(updateReq *view.BalanceUpdate, walletId int) (float64, int, e
 	var wallet entity.Wallet
 	var isFailedTransaction bool = false
 
-	err = tx.Set("gorm:query_option", "FOR UPDATE").First(&wallet, walletId).Error
+	// err = tx.Set("gorm:query_option", "FOR UPDATE").First(&wallet, walletId).Error
+	err = tx.Clauses(clause.Locking{
+		Strength: "SHARE",
+		Table:    clause.Table{Name: clause.CurrentTable},
+	}).Find(&wallet, walletId).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		log.Println("Record not found for Wallet ID:", walletId)
@@ -113,7 +118,11 @@ func WalletBalance(updateReq *view.BalanceUpdate, walletId int) (float64, int, e
 		return -1, -1, err
 	}
 
+	time.Sleep(10 * time.Second)
+	log.Println("---------------------------------DONE")
+
 	if err := tx.Commit().Error; err != nil {
+		log.Println("Cannot commit transaction:", err)
 		return -1, -1, err
 	}
 	return wallet.Balance, transaction.ID, nil
@@ -121,12 +130,39 @@ func WalletBalance(updateReq *view.BalanceUpdate, walletId int) (float64, int, e
 }
 
 func WalletStatus(updateReq *view.StatusUpdate, walletId int) error {
+	tx := db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
 
-	wallet, err := GetWallet(walletId)
-	if err != nil {
+	if err := tx.Error; err != nil {
+		log.Println("Cannot start DB transaction:", err)
 		return err
 	}
+	var wallet entity.Wallet
+	err = tx.Clauses(clause.Locking{
+		Strength: "SHARE",
+		Table:    clause.Table{Name: clause.CurrentTable},
+	}).Find(&wallet, walletId).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		log.Println("Record not found for Wallet ID:", walletId)
+		return err
+	}
+	if err != nil {
+		log.Println("Cannot fetch wallet", err)
+		return err
+	}
+
 	wallet.IsBlocked = updateReq.NewStatus
-	db.Save(&wallet)
+	err = tx.Save(&wallet).Error
+	if err != nil {
+		log.Println("Cannot update wallet status:", err)
+		return err
+	}
+	if err := tx.Commit().Error; err != nil {
+		return err
+	}
 	return nil
 }
