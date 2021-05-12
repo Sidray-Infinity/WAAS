@@ -1,6 +1,7 @@
 package Impl
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -18,6 +19,8 @@ var err error
 var db *gorm.DB
 
 var rdb *redis.Client
+var ctx = context.Background()
+
 var cronMutex *redsync.Mutex
 
 func ConnectRedis() {
