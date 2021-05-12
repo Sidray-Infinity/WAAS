@@ -30,3 +30,7 @@
     - Entity
     - Impl : Interaction with DB
     - Views : Request params -> Entity (or the other way)
+
+## References
+### Distributed locks
+- https://kylewbanks.com/blog/distributed-locks-using-golang-and-redis

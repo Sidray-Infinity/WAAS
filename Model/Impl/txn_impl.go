@@ -11,14 +11,13 @@ import (
 )
 
 func GenerateCSV() {
-	// currTime := time.Now()
-	currTime, _ := time.Parse(time.RFC822, "06 May 21 09:00 IST") // For testing
-	if currTime.Hour() != 9 {
-		log.Println("Report can be generated ony at 9 AM")
+
+	if err := cronMutex.Lock(); err != nil {
+		log.Println("Lock Failed:", err)
 		return
 	}
-
-	prevDate := currTime.AddDate(0, 0, -1)
+	log.Println("`cron-mutex` lock acquired")
+	prevDate := time.Now().AddDate(0, 0, -1)
 
 	var transactions []entity.Transaction
 	db.Debug().Where("YEAR(`time`) = ?", prevDate.Year()).
@@ -58,4 +57,12 @@ func GenerateCSV() {
 			log.Println("Cannot write row to file", err)
 		}
 	}
+	time.Sleep(10 * time.Second)
+	log.Println("SLEEP DONE")
+
+	if ok, err := cronMutex.Unlock(); !ok || err != nil {
+		log.Println("Unlock Failed:", ok, err)
+		return
+	}
+	log.Println("`cron-mutex` lock released")
 }

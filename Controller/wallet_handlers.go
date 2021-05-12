@@ -27,10 +27,6 @@ func walletHandler(rw http.ResponseWriter, r *http.Request) {
 		}
 		log.Println("Wallet Created")
 		rw.WriteHeader(http.StatusCreated)
-	} else {
-		// Catch undefined methods
-
-		http.Error(rw, "Method not implemented for wallet", http.StatusBadRequest)
 	}
 }
 
@@ -49,10 +45,8 @@ func balanceHandler(rw http.ResponseWriter, r *http.Request) {
 
 		log.Println("Wallet balance updated")
 
-	} else {
-		// Catch undefined methods
+	} else if r.Method == http.MethodGet {
 
-		http.Error(rw, "Method not implemented for walletBalance", http.StatusBadRequest)
 	}
 }
 
@@ -65,9 +59,7 @@ func statusHandler(rw http.ResponseWriter, r *http.Request) {
 		}
 		log.Println("Wallet status updated")
 		rw.WriteHeader(http.StatusNoContent)
-	} else {
-		// Catch undefined methods
+	} else if r.Method == http.MethodGet {
 
-		http.Error(rw, "Method not implemented for walletBalance", http.StatusBadRequest)
 	}
 }

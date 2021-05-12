@@ -14,8 +14,9 @@ func Route() http.Handler {
 
 	mux.HandleFunc("/wallet/{id:[0-9]+}", walletHandler).Methods("GET")
 	mux.HandleFunc("/wallet", walletHandler).Methods("POST")
-	mux.HandleFunc("/wallet/balance/{id:[0-9]+}", balanceHandler).Methods("PATCH")
-	mux.HandleFunc("/wallet/status/{id:[0-9]+}", statusHandler).Methods("PATCH")
+	mux.HandleFunc("/wallet/balance/{id:[0-9]+}", balanceHandler).Methods("PATCH", "GET")
+	mux.HandleFunc("/wallet/status/{id:[0-9]+}", statusHandler).Methods("PATCH", "GET")
+	mux.HandleFunc("/generateCSV", GenerateCSV)
 
 	return mux
 }

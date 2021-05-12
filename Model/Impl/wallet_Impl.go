@@ -86,6 +86,7 @@ func WalletBalance(updateReq *view.BalanceUpdate, walletId int) (float64, int, e
 	err = tx.Create(&transaction).Error
 	if err != nil {
 		log.Println("Cannot create transaction:", err)
+		tx.Rollback()
 		return -1, -1, err
 	}
 
@@ -111,6 +112,7 @@ func WalletBalance(updateReq *view.BalanceUpdate, walletId int) (float64, int, e
 	err = tx.Save(&transaction).Error
 	if err != nil {
 		log.Println("Cannot update transaction:", err)
+		tx.Rollback()
 		return -1, -1, err
 	}
 
@@ -123,6 +125,7 @@ func WalletBalance(updateReq *view.BalanceUpdate, walletId int) (float64, int, e
 
 	if err := tx.Commit().Error; err != nil {
 		log.Println("Cannot commit transaction:", err)
+		tx.Rollback()
 		return -1, -1, err
 	}
 	return wallet.Balance, transaction.ID, nil
@@ -161,6 +164,8 @@ func WalletStatus(updateReq *view.StatusUpdate, walletId int) error {
 		log.Println("Cannot update wallet status:", err)
 		return err
 	}
+	time.Sleep(10 * time.Second)
+	log.Println("---------------------------------DONE STATUS")
 	if err := tx.Commit().Error; err != nil {
 		return err
 	}
