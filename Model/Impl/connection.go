@@ -17,11 +17,11 @@ var address string = "root:root@tcp(127.0.0.1:3306)/waas?charset=utf8&parseTime=
 var err error
 var db *gorm.DB
 
-// var rdb *redis.Client
+var rdb *redis.Client
 var cronMutex *redsync.Mutex
 
 func ConnectRedis() {
-	rdb := redis.NewClient(&redis.Options{
+	rdb = redis.NewClient(&redis.Options{
 		Addr:     "localhost:6379",
 		Password: "",
 		DB:       0,
@@ -36,10 +36,10 @@ func ConnectRedis() {
 }
 
 func CloseRedis() {
-	// err = rdb.Close()
-	// if err != nil {
-	// 	log.Println("Cannot close redis client:", err)
-	// }
+	err = rdb.Close()
+	if err != nil {
+		log.Println("Cannot close redis client:", err)
+	}
 }
 
 func ConnnectToDB() {
