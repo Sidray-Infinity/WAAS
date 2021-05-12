@@ -46,7 +46,12 @@ func balanceHandler(rw http.ResponseWriter, r *http.Request) {
 		log.Println("Wallet balance updated")
 
 	} else if r.Method == http.MethodGet {
-
+		balance, err := Domain.GetBalance(rw, r)
+		if err != nil {
+			http.Error(rw, "Could not fetch wallet balance", http.StatusInternalServerError)
+			return
+		}
+		json.NewEncoder(rw).Encode(map[string]float64{"balance": *balance})
 	}
 }
 
@@ -60,6 +65,11 @@ func statusHandler(rw http.ResponseWriter, r *http.Request) {
 		log.Println("Wallet status updated")
 		rw.WriteHeader(http.StatusNoContent)
 	} else if r.Method == http.MethodGet {
-
+		status, err := Domain.GetStatus(rw, r)
+		if err != nil {
+			http.Error(rw, "Could not fetch wallet status", http.StatusInternalServerError)
+			return
+		}
+		json.NewEncoder(rw).Encode(map[string]bool{"status": *status})
 	}
 }

@@ -27,6 +27,16 @@ func RegisterWallet(rw http.ResponseWriter, r *http.Request) error {
 	return Impl.RegisterWallet(newWallet)
 }
 
+func GetBalance(rw http.ResponseWriter, r *http.Request) (*float64, error) {
+	walletId, _ := strconv.Atoi(mux.Vars(r)["id"])
+	return Impl.GetBalance(walletId)
+}
+
+func GetStatus(rw http.ResponseWriter, r *http.Request) (*bool, error) {
+	walletId, _ := strconv.Atoi(mux.Vars(r)["id"])
+	return Impl.GetStatus(walletId)
+}
+
 func WalletBalance(rw http.ResponseWriter, r *http.Request) (float64, int, error) {
 	updateReq := &view.BalanceUpdate{}
 	json.NewDecoder(r.Body).Decode(updateReq)

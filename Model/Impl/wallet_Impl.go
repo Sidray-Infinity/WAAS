@@ -26,6 +26,36 @@ func GetWallet(walletId int) (*entity.Wallet, error) {
 	return wallet, nil
 }
 
+func GetBalance(walletId int) (*float64, error) {
+	wallet := &entity.Wallet{}
+	err = db.Find(&wallet, walletId).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		log.Println("Record not found for Wallet ID:", walletId)
+		return nil, err
+	}
+	if err != nil {
+		log.Println("Cannot fetch wallet", err)
+		return nil, err
+	}
+
+	return &wallet.Balance, nil
+}
+
+func GetStatus(walletId int) (*bool, error) {
+	wallet := &entity.Wallet{}
+	err = db.Find(&wallet, walletId).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		log.Println("Record not found for Wallet ID:", walletId)
+		return nil, err
+	}
+	if err != nil {
+		log.Println("Cannot fetch wallet", err)
+		return nil, err
+	}
+
+	return &wallet.IsBlocked, nil
+}
+
 func RegisterWallet(newWallet *entity.Wallet) error {
 	user, err := GetUser(newWallet.UserId)
 	if err != nil {
@@ -164,8 +194,8 @@ func WalletStatus(updateReq *view.StatusUpdate, walletId int) error {
 		log.Println("Cannot update wallet status:", err)
 		return err
 	}
-	time.Sleep(10 * time.Second)
-	log.Println("---------------------------------DONE STATUS")
+	// time.Sleep(10 * time.Second)
+	// log.Println("---------------------------------DONE STATUS")
 	if err := tx.Commit().Error; err != nil {
 		return err
 	}
