@@ -5,14 +5,20 @@ import (
 	"log"
 	"net/http"
 	"waas/Domain"
+	DomainImpl "waas/Domain/Impl"
 	"waas/Model/view"
 )
 
-func walletHandler(rw http.ResponseWriter, r *http.Request) {
+type WalletHandler struct {
+	walletDomain Domain.WalletDomain
+}
+
+func (w *WalletHandler) walletHandler(rw http.ResponseWriter, r *http.Request) {
+	w.walletDomain = &DomainImpl.WalletDomainImpl{}
 	if r.Method == http.MethodGet {
 		// Fetch a wallet
 
-		wallet, err := Domain.GetWallet(rw, r)
+		wallet, err := w.walletDomain.GetWallet(rw, r)
 		if err != nil {
 			http.Error(rw, "Cannot fetch wallet", http.StatusInternalServerError) // Error code should be decided at runtime
 		}
@@ -20,7 +26,7 @@ func walletHandler(rw http.ResponseWriter, r *http.Request) {
 	} else if r.Method == http.MethodPost {
 		// Add a new wallet
 
-		err := Domain.RegisterWallet(rw, r)
+		err := w.walletDomain.RegisterWallet(rw, r)
 		if err != nil {
 			http.Error(rw, "Cannot Regsiter wallet", http.StatusInternalServerError)
 			return
@@ -30,9 +36,10 @@ func walletHandler(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func balanceHandler(rw http.ResponseWriter, r *http.Request) {
+func (w *WalletHandler) balanceHandler(rw http.ResponseWriter, r *http.Request) {
+	w.walletDomain = &DomainImpl.WalletDomainImpl{}
 	if r.Method == http.MethodPatch {
-		updatedBalance, txnId, err := Domain.WalletBalance(rw, r)
+		updatedBalance, txnId, err := w.walletDomain.WalletBalance(rw, r)
 		if err != nil {
 			http.Error(rw, "Could not update wallet balance", http.StatusInternalServerError)
 			return
@@ -46,7 +53,7 @@ func balanceHandler(rw http.ResponseWriter, r *http.Request) {
 		log.Println("Wallet balance updated")
 
 	} else if r.Method == http.MethodGet {
-		balance, err := Domain.GetBalance(rw, r)
+		balance, err := w.walletDomain.GetBalance(rw, r)
 		if err != nil {
 			http.Error(rw, "Could not fetch wallet balance", http.StatusInternalServerError)
 			return
@@ -55,9 +62,10 @@ func balanceHandler(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func statusHandler(rw http.ResponseWriter, r *http.Request) {
+func (w *WalletHandler) statusHandler(rw http.ResponseWriter, r *http.Request) {
+	w.walletDomain = &DomainImpl.WalletDomainImpl{}
 	if r.Method == http.MethodPatch {
-		err := Domain.WalletStatus(rw, r)
+		err := w.walletDomain.WalletStatus(rw, r)
 		if err != nil {
 			http.Error(rw, "Could not update wallet balance", http.StatusInternalServerError)
 			return
@@ -65,7 +73,7 @@ func statusHandler(rw http.ResponseWriter, r *http.Request) {
 		log.Println("Wallet status updated")
 		rw.WriteHeader(http.StatusNoContent)
 	} else if r.Method == http.MethodGet {
-		status, err := Domain.GetStatus(rw, r)
+		status, err := w.walletDomain.GetStatus(rw, r)
 		if err != nil {
 			http.Error(rw, "Could not fetch wallet status", http.StatusInternalServerError)
 			return

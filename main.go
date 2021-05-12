@@ -12,7 +12,8 @@ import (
 func main() {
 
 	// Cron job to generate CSV periodically
-	gocron.Every(1).Day().At("09:00").Do(controller.GenerateCSV)
+	t := &controller.TransactionHandler{}
+	gocron.Every(1).Day().At("09:00").Do(t.GenerateCSV)
 	go func() {
 		<-gocron.Start()
 	}()

@@ -5,6 +5,10 @@ import (
 	"waas/Domain"
 )
 
-func GenerateCSV(w http.ResponseWriter, r *http.Request) {
-	Domain.GenerateCSV()
+type TransactionHandler struct {
+	transactionDomain Domain.TransactionDomain
+}
+
+func (t *TransactionHandler) GenerateCSV(w http.ResponseWriter, r *http.Request) {
+	t.transactionDomain.GenerateCSV()
 }

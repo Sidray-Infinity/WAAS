@@ -3,11 +3,7 @@
 
 ## TO DO
 - Add validation of data in all insert APIs
-- Add status column in transaction table
-- Return userid on registration
-- Is userId required while fetch wallet?
-- Handle concurrency
-- Status column in transaction
+- Check if username / KYC is duplicated
 - Dependency Injection 
 
 ## Stack

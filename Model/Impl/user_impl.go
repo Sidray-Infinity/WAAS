@@ -8,7 +8,9 @@ import (
 	"gorm.io/gorm"
 )
 
-func GetUser(userId int) (*entity.User, error) {
+type UserModelImpl struct{}
+
+func (u *UserModelImpl) GetUser(userId int) (*entity.User, error) {
 	var user entity.User
 	err = db.Find(&user, userId).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -23,7 +25,7 @@ func GetUser(userId int) (*entity.User, error) {
 	return &user, nil
 }
 
-func RegisterUser(newUser entity.User) error {
+func (u *UserModelImpl) RegisterUser(newUser entity.User) error {
 	err = db.Create(&newUser).Error
 	if err != nil {
 		log.Println("Eror while registering user:", err)

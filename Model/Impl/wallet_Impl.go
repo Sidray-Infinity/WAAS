@@ -3,8 +3,8 @@ package Impl
 import (
 	"errors"
 	"log"
-	"strconv"
 	"time"
+	"waas/Model"
 	entity "waas/Model/entity"
 	"waas/Model/view"
 
@@ -12,7 +12,11 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-func GetWallet(walletId int) (*entity.Wallet, error) {
+type WalletModelImpl struct {
+	userModel Model.UserModel
+}
+
+func (w *WalletModelImpl) GetWallet(walletId int) (*entity.Wallet, error) {
 	wallet := &entity.Wallet{}
 	err = db.Find(&wallet, walletId).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -27,33 +31,7 @@ func GetWallet(walletId int) (*entity.Wallet, error) {
 	return wallet, nil
 }
 
-func getBalanceRedis(walletId int) (float64, bool) {
-	vals, err := rdb.Get(ctx, strconv.Itoa(walletId)).Result()
-	if err != nil {
-		log.Println("Cannot fetch from catche:", err)
-		return -1, false
-	}
-	if len(vals) > 0 {
-		val, err := strconv.ParseFloat(vals, 64)
-		if err != nil {
-			log.Println("Redis: Cannot convert to float", err)
-			return -1, false
-		}
-		return val, true
-	}
-	return -1, false
-}
-
-func setBalanceRedis(walletId int, balance float64, expiry time.Duration) {
-	_, err = rdb.Set(ctx, strconv.Itoa(walletId),
-		strconv.FormatFloat(balance, 'f', 6, 64), expiry).Result()
-
-	if err != nil {
-		log.Println("Cannot set on cache:", err)
-	}
-}
-
-func GetBalance(walletId int) (*float64, error) {
+func (w *WalletModelImpl) GetBalance(walletId int) (*float64, error) {
 	val, found := getBalanceRedis(walletId)
 	if found {
 		return &val, nil
@@ -74,7 +52,7 @@ func GetBalance(walletId int) (*float64, error) {
 	return &wallet.Balance, nil
 }
 
-func GetStatus(walletId int) (*bool, error) {
+func (w *WalletModelImpl) GetStatus(walletId int) (*bool, error) {
 	wallet := &entity.Wallet{}
 	err = db.Find(&wallet, walletId).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -89,8 +67,9 @@ func GetStatus(walletId int) (*bool, error) {
 	return &wallet.IsBlocked, nil
 }
 
-func RegisterWallet(newWallet *entity.Wallet) error {
-	user, err := GetUser(newWallet.UserId)
+func (w *WalletModelImpl) RegisterWallet(newWallet *entity.Wallet) error {
+	w.userModel = &UserModelImpl{}
+	user, err := w.userModel.GetUser(newWallet.UserId)
 	if err != nil {
 		return err
 	}
@@ -103,7 +82,8 @@ func RegisterWallet(newWallet *entity.Wallet) error {
 	return err
 }
 
-func WalletBalance(updateReq *view.BalanceUpdate, walletId int) (float64, int, error) {
+func (w *WalletModelImpl) WalletBalance(updateReq *view.BalanceUpdate, walletId int) (float64, int, error) {
+
 	tx := db.Begin()
 	defer func() {
 		if r := recover(); r != nil {
@@ -120,7 +100,6 @@ func WalletBalance(updateReq *view.BalanceUpdate, walletId int) (float64, int, e
 	var wallet entity.Wallet
 	var isFailedTransaction bool = false
 
-	// err = tx.Set("gorm:query_option", "FOR UPDATE").First(&wallet, walletId).Error
 	err = tx.Clauses(clause.Locking{
 		Strength: "SHARE",
 		Table:    clause.Table{Name: clause.CurrentTable},
@@ -185,17 +164,19 @@ func WalletBalance(updateReq *view.BalanceUpdate, walletId int) (float64, int, e
 
 	time.Sleep(10 * time.Second)
 	log.Println("---------------------------------DONE")
-
 	if err := tx.Commit().Error; err != nil {
 		log.Println("Cannot commit transaction:", err)
 		tx.Rollback()
 		return -1, -1, err
 	}
+	// context switch : getBalance
+	setBalanceRedis(walletId, wallet.Balance, 0) // Update cache with new balance
+
 	return wallet.Balance, transaction.ID, nil
 
 }
 
-func WalletStatus(updateReq *view.StatusUpdate, walletId int) error {
+func (w *WalletModelImpl) WalletStatus(updateReq *view.StatusUpdate, walletId int) error {
 	tx := db.Begin()
 	defer func() {
 		if r := recover(); r != nil {

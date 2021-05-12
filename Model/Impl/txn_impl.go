@@ -10,7 +10,9 @@ import (
 	entity "waas/Model/entity"
 )
 
-func GenerateCSV() {
+type TransactionModelImpl struct{}
+
+func (t *TransactionModelImpl) GenerateCSV() {
 
 	if err := cronMutex.Lock(); err != nil {
 		log.Println("Lock Failed:", err)
