@@ -100,6 +100,7 @@ func (w *WalletModelImpl) WalletBalance(updateReq *view.BalanceUpdate, walletId 
 	var wallet entity.Wallet
 	var isFailedTransaction bool = false
 
+	// Apply Shared lock on the DB row, if found
 	err = tx.Clauses(clause.Locking{
 		Strength: "SHARE",
 		Table:    clause.Table{Name: clause.CurrentTable},
@@ -162,13 +163,17 @@ func (w *WalletModelImpl) WalletBalance(updateReq *view.BalanceUpdate, walletId 
 		return -1, -1, err
 	}
 
-	time.Sleep(10 * time.Second)
-	log.Println("---------------------------------DONE")
+	deleteBalanceRedis(walletId) // Deleting redis entry for data consistency
+	for i := 0; i < 10; i++ {
+		log.Printf("%d ", i)
+		time.Sleep(time.Second)
+	}
 	if err := tx.Commit().Error; err != nil {
 		log.Println("Cannot commit transaction:", err)
 		tx.Rollback()
 		return -1, -1, err
 	}
+
 	// context switch : getBalance
 	setBalanceRedis(walletId, wallet.Balance, 0) // Update cache with new balance
 

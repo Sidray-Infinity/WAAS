@@ -31,3 +31,10 @@ func setBalanceRedis(walletId int, balance float64, expiry time.Duration) {
 		log.Println("Cannot set on cache:", err)
 	}
 }
+
+func deleteBalanceRedis(walletId int) {
+	_, err = rdb.Del(ctx, strconv.Itoa(walletId)).Result()
+	if err != nil {
+		log.Println("Cannot delete Redis key:", walletId, err)
+	}
+}

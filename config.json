@@ -1,10 +1,20 @@
-"time" {
-    "09:00"
+{
+    "database": {
+        "host": "localhost",
+        "port": "3306",
+        "schema": "waas",
+        "username": "root",
+        "password": "root"
+    },
+    "redis": {
+        "address": "localhost:6379",
+        "db": 0
+    },
+    "distMutex": {
+        "cronTime": "09:00",
+        "cronMutex": "cron-mutex",
+        "expiryDuration": 20
+    },
+    "host": "localhost",
+    "port": "8080"
 }
-db : {
-
-}
-
-domain name 
-port
-db
