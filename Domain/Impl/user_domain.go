@@ -2,6 +2,7 @@ package Domain
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"strconv"
@@ -30,5 +31,19 @@ func (u *UserDomainImpl) RegisterUser(rw http.ResponseWriter, r *http.Request) e
 		log.Println("Cannot decode JSON", err)
 		return err
 	}
+	err = u.validate(newUser)
+	if err != nil {
+		return err
+	}
 	return u.userModel.RegisterUser(newUser)
+}
+
+func (u *UserDomainImpl) validate(newUser entity.User) error {
+	if !u.userModel.ValidateUsername(newUser) {
+		return errors.New("username invalid or taken")
+	}
+	if !u.userModel.ValidateKYC(newUser) {
+		return errors.New("invalid Kyc")
+	}
+	return nil
 }

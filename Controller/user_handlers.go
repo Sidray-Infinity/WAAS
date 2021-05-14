@@ -17,6 +17,7 @@ func (u *UserHandler) userHandler(rw http.ResponseWriter, r *http.Request) {
 		user, err := u.userDomain.GetUser(rw, r)
 		if err != nil {
 			http.Error(rw, "Cannot fetch user", http.StatusInternalServerError)
+			return
 		}
 		json.NewEncoder(rw).Encode(user)
 
@@ -24,11 +25,9 @@ func (u *UserHandler) userHandler(rw http.ResponseWriter, r *http.Request) {
 		err := u.userDomain.RegisterUser(rw, r)
 		if err != nil {
 			http.Error(rw, "Cannot Regsiter user", http.StatusInternalServerError)
+			return
 		}
 		rw.WriteHeader(http.StatusCreated)
-	} else {
-		// catch all
-		http.Error(rw, "Method not implemented for user", http.StatusBadRequest)
 	}
 
 }

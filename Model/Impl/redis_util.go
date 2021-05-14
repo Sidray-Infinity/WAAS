@@ -4,12 +4,19 @@ import (
 	"log"
 	"strconv"
 	"time"
+
+	"github.com/go-redis/redis/v8"
 )
 
 func getBalanceRedis(walletId int) (float64, bool) {
 	vals, err := rdb.Get(ctx, strconv.Itoa(walletId)).Result()
 	if err != nil {
-		log.Println("Cannot fetch from catche:", err)
+		if err == redis.Nil {
+			log.Println("Redis: Cache miss")
+		} else {
+			log.Println("Redis: Cannot fetch from cache:", err)
+		}
+
 		return -1, false
 	}
 	if len(vals) > 0 {
@@ -28,13 +35,13 @@ func setBalanceRedis(walletId int, balance float64, expiry time.Duration) {
 		strconv.FormatFloat(balance, 'f', 6, 64), expiry).Result()
 
 	if err != nil {
-		log.Println("Cannot set on cache:", err)
+		log.Println("Redis: Cannot set on cache:", err)
 	}
 }
 
 func deleteBalanceRedis(walletId int) {
 	_, err = rdb.Del(ctx, strconv.Itoa(walletId)).Result()
 	if err != nil {
-		log.Println("Cannot delete Redis key:", walletId, err)
+		log.Println("Redis: Cannot delete Redis key:", walletId, err)
 	}
 }

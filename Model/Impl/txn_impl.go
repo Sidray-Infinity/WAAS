@@ -13,7 +13,7 @@ import (
 type TransactionModelImpl struct{}
 
 func (t *TransactionModelImpl) GenerateCSV() {
-
+	start := time.Now()
 	if err := cronMutex.Lock(); err != nil {
 		log.Println("Lock Failed:", err)
 		return
@@ -59,12 +59,13 @@ func (t *TransactionModelImpl) GenerateCSV() {
 			log.Println("Cannot write row to file", err)
 		}
 	}
-	time.Sleep(10 * time.Second)
-	log.Println("SLEEP DONE")
+	// time.Sleep(10 * time.Second)
+	// log.Println("SLEEP DONE")
 
 	if ok, err := cronMutex.Unlock(); !ok || err != nil {
 		log.Println("Unlock Failed:", ok, err)
 		return
 	}
 	log.Println("`cron-mutex` lock released")
+	log.Println("Time taken:", time.Since(start))
 }

@@ -32,3 +32,23 @@ func (u *UserModelImpl) RegisterUser(newUser entity.User) error {
 	}
 	return err
 }
+
+func (u *UserModelImpl) ValidateUsername(newUser entity.User) bool {
+	err = db.Where("user_name = ?", newUser.UserName).First(&newUser).Error
+	if err == gorm.ErrRecordNotFound {
+		return true
+	} else if err != nil {
+		log.Println("Cannot validate username:", err)
+	}
+	return false
+}
+
+func (u *UserModelImpl) ValidateKYC(newUser entity.User) bool {
+	err = db.Where("aadhar_number = ?", newUser.AadharNumber).First(&newUser).Error
+	if err == gorm.ErrRecordNotFound {
+		return true
+	} else if err != nil {
+		log.Println("Cannot validate Aadhar Number:", err)
+	}
+	return false
+}

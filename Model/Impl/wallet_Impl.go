@@ -163,16 +163,24 @@ func (w *WalletModelImpl) WalletBalance(updateReq *view.BalanceUpdate, walletId 
 		return -1, -1, err
 	}
 
-	deleteBalanceRedis(walletId) // Deleting redis entry for data consistency
-	for i := 0; i < 10; i++ {
-		log.Printf("%d ", i)
-		time.Sleep(time.Second)
-	}
+	//deleteBalanceRedis(walletId) // Deleting redis entry for data consistency
+	/*
+		========================================================
+		WHAT IF CONTEXT SWITCHES HERE?
+	*/
+	// for i := 0; i < 15; i++ {
+	// 	log.Printf("%d ", i)
+	// 	time.Sleep(time.Second)
+	// }
 	if err := tx.Commit().Error; err != nil {
 		log.Println("Cannot commit transaction:", err)
 		tx.Rollback()
 		return -1, -1, err
 	}
+	// for i := 0; i < 15; i++ {
+	// 	log.Printf("%d ", i)
+	// 	time.Sleep(time.Second)
+	// }
 
 	// context switch : getBalance
 	setBalanceRedis(walletId, wallet.Balance, 0) // Update cache with new balance

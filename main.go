@@ -6,6 +6,8 @@ import (
 	controller "waas/Controller"
 	"waas/Model/Impl"
 
+	_ "waas/Docs"
+
 	"github.com/jasonlvhit/gocron"
 )
 

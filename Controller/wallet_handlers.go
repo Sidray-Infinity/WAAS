@@ -21,6 +21,7 @@ func (w *WalletHandler) walletHandler(rw http.ResponseWriter, r *http.Request) {
 		wallet, err := w.walletDomain.GetWallet(rw, r)
 		if err != nil {
 			http.Error(rw, "Cannot fetch wallet", http.StatusInternalServerError) // Error code should be decided at runtime
+			return
 		}
 		json.NewEncoder(rw).Encode(wallet)
 	} else if r.Method == http.MethodPost {
