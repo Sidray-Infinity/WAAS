@@ -1,0 +1,276 @@
+basePath: /
+consumes:
+- application/json
+definitions:
+  BalanceUpdateResp:
+    properties:
+      transaction_id:
+        format: int64
+        type: integer
+        x-go-name: TransactionId
+      updated_balance:
+        format: double
+        type: number
+        x-go-name: UpdatedBalance
+    type: object
+    x-go-package: waas/Model/view
+  User:
+    properties:
+      aadhar_number:
+        format: int64
+        type: integer
+        x-go-name: AadharNumber
+      password:
+        type: string
+        x-go-name: Password
+      user_id:
+        format: int64
+        type: integer
+        x-go-name: ID
+      user_name:
+        type: string
+        x-go-name: UserName
+    type: object
+    x-go-package: waas/Model/entity
+  Wallet:
+    properties:
+      User:
+        $ref: '#/definitions/User'
+      balance:
+        format: double
+        type: number
+        x-go-name: Balance
+      is_blocked:
+        type: boolean
+        x-go-name: IsBlocked
+      user_id:
+        format: int64
+        type: integer
+        x-go-name: UserId
+      wallet_id:
+        format: int64
+        type: integer
+        x-go-name: ID
+    type: object
+    x-go-package: waas/Model/entity
+  balanceFetchResponse:
+    properties:
+      balance:
+        format: int64
+        type: integer
+        x-go-name: Balance
+    type: object
+    x-go-package: waas/Docs
+  statusFetchResponse:
+    properties:
+      status:
+        type: boolean
+        x-go-name: Status
+    type: object
+    x-go-package: waas/Docs
+  statusUpdateRequest:
+    properties:
+      status:
+        type: boolean
+        x-go-name: Status
+    type: object
+    x-go-package: waas/Docs
+  userRegisterRequest:
+    description: type userRegisterReponse struct{}
+    properties:
+      aadhar_number:
+        format: int64
+        type: integer
+        x-go-name: AadharNumber
+      password:
+        type: string
+        x-go-name: Password
+      user_name:
+        type: string
+        x-go-name: UserName
+    type: object
+    x-go-package: waas/Docs
+  walletRegisterRequest:
+    properties:
+      user_id:
+        format: int64
+        type: integer
+        x-go-name: UserId
+    type: object
+    x-go-package: waas/Docs
+host: localhost:8080
+info:
+  description: Documentation of our WAAS APIs.
+  title: WAAS.
+  version: 1.0.0
+paths:
+  /generateCSV:
+    get:
+      operationId: generateCSV
+      responses:
+        "200":
+          $ref: '#/responses/generateCSVResponse'
+      summary: API used generate CSV of transactions.
+      tags:
+      - Transaction
+  /user:
+    post:
+      operationId: userRegister
+      parameters:
+      - description: This text will appear as description of your request body.
+        in: body
+        name: Body
+        schema:
+          $ref: '#/definitions/userRegisterRequest'
+      responses:
+        "201":
+          $ref: '#/responses/userRegisterResponse'
+      summary: Api used to register a user.
+      tags:
+      - User
+  /user/{Id}:
+    get:
+      operationId: userFetch
+      parameters:
+      - description: ID of the user to be fetched.
+        format: int64
+        in: path
+        name: Id
+        required: true
+        type: integer
+      responses:
+        "200":
+          $ref: '#/responses/userFetchResponse'
+      summary: API used to fetch user details.
+      tags:
+      - User
+  /wallet:
+    post:
+      operationId: walletRegister
+      parameters:
+      - description: UserId of the user for which wallet has to be created, is passed
+          as input.
+        in: body
+        name: Body
+        schema:
+          $ref: '#/definitions/walletRegisterRequest'
+      responses:
+        "201":
+          $ref: '#/responses/walletRegisterResponse'
+      summary: Api used to register a wallet, for a given user.
+      tags:
+      - Wallet
+  /wallet/{Id}:
+    get:
+      operationId: walletFetch
+      parameters:
+      - description: Wallet id is passed as parameter.
+        format: int64
+        in: path
+        name: Id
+        required: true
+        type: integer
+      responses:
+        "200":
+          $ref: '#/responses/walletFetchResponse'
+      summary: Api used to fetch a wallet, based on given wallet id.
+      tags:
+      - Wallet
+  /wallet/balance/{Id}:
+    get:
+      operationId: walletBalanceFetch
+      parameters:
+      - description: Wallet id is passed as parameter.
+        format: int64
+        in: path
+        name: Id
+        required: true
+        type: integer
+      responses:
+        "200":
+          $ref: '#/responses/walletBalanceFetchResponse'
+      summary: Api used to fetch the balance of a wallet, based on given wallet id.
+      tags:
+      - Wallet
+    patch:
+      operationId: walletBalanceUpdate
+      parameters:
+      - description: Wallet id is passed as parameter.
+        format: int64
+        in: path
+        name: Id
+        required: true
+        type: integer
+      responses:
+        "200":
+          $ref: '#/responses/walletBalanceUpdateResponse'
+      summary: Api used to update the balance of a wallet, based on given wallet id.
+      tags:
+      - Wallet
+  /wallet/status/{Id}:
+    get:
+      operationId: walletStatusFetch
+      parameters:
+      - description: Wallet id is passed as parameter.
+        format: int64
+        in: path
+        name: Id
+        required: true
+        type: integer
+      responses:
+        "200":
+          $ref: '#/responses/walletStatusFetchResponse'
+      summary: Api used to fetch the status of a wallet, based on given wallet id.
+      tags:
+      - Wallet
+    patch:
+      operationId: walletStatusUpdate
+      parameters:
+      - description: Wallet id is passed as parameter.
+        in: body
+        name: Body
+        schema:
+          $ref: '#/definitions/statusUpdateRequest'
+      responses:
+        "204":
+          $ref: '#/responses/walletBalanceStatusResponse'
+      summary: Api used to update the status of a wallet, based on given wallet id.
+      tags:
+      - Wallet
+produces:
+- application/json
+responses:
+  generateCSVResponse:
+    description: Status code is the only response.
+  userFetchResponse:
+    description: The user details is returned in JSON format.
+    schema:
+      $ref: '#/definitions/User'
+  userRegisterResponse:
+    description: The only response is the status code.
+  walletBalanceFetchResponse:
+    description: The current balance of the wallet is returned.
+    schema:
+      $ref: '#/definitions/balanceFetchResponse'
+  walletBalanceStatusResponse:
+    description: The status code is the only response.
+  walletBalanceUpdateResponse:
+    description: The transaction id, as well as updated balance of the wallet is returned.
+    schema:
+      $ref: '#/definitions/BalanceUpdateResp'
+  walletFetchResponse:
+    description: The wallet record is returned in JSON format.
+    schema:
+      $ref: '#/definitions/Wallet'
+  walletRegisterResponse:
+    description: The only response is the status code.
+  walletStatusFetchResponse:
+    description: The current status of the wallet is returned.
+    schema:
+      $ref: '#/definitions/statusFetchResponse'
+schemes:
+- http
+securityDefinitions:
+  basic:
+    type: basic
+swagger: "2.0"

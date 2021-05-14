@@ -1,6 +1,6 @@
 // Package classification WAAS.
 //
-// Documentation of our WAAS API.
+// Documentation of our WAAS APIs.
 //
 //     Schemes: http
 //     BasePath: /
