@@ -13,6 +13,11 @@ type balanceFetchResponse struct {
 	Balance int `json:"balance"`
 }
 
+type balanceUpdateRequest struct {
+	Type   bool    `json:"type"`
+	Amount float64 `json:"amount"`
+}
+
 type statusUpdateRequest struct {
 	Status bool `json:"status"`
 }
@@ -71,6 +76,8 @@ type walletBalanceUpdateResponse struct {
 // swagger:parameters walletBalanceUpdate
 type walletBalanceUpdateParamsWrapper struct {
 	// Wallet id is passed as parameter.
+	// in:body
+	Body balanceUpdateRequest
 	// in:path
 	Id int
 }
@@ -108,6 +115,8 @@ type walletStatusUpdateParamsWrapper struct {
 	// Wallet id is passed as parameter.
 	// in:body
 	Body statusUpdateRequest
+	// in:path
+	Id int
 }
 
 // swagger:route GET /wallet/status/{Id} Wallet walletStatusFetch

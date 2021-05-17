@@ -61,6 +61,17 @@ definitions:
         x-go-name: Balance
     type: object
     x-go-package: waas/Docs
+  balanceUpdateRequest:
+    properties:
+      amount:
+        format: double
+        type: number
+        x-go-name: Amount
+      type:
+        type: boolean
+        x-go-name: Type
+    type: object
+    x-go-package: waas/Docs
   statusFetchResponse:
     properties:
       status:
@@ -196,7 +207,11 @@ paths:
       operationId: walletBalanceUpdate
       parameters:
       - description: Wallet id is passed as parameter.
-        format: int64
+        in: body
+        name: Body
+        schema:
+          $ref: '#/definitions/balanceUpdateRequest'
+      - format: int64
         in: path
         name: Id
         required: true
@@ -231,6 +246,11 @@ paths:
         name: Body
         schema:
           $ref: '#/definitions/statusUpdateRequest'
+      - format: int64
+        in: path
+        name: Id
+        required: true
+        type: integer
       responses:
         "204":
           $ref: '#/responses/walletBalanceStatusResponse'
