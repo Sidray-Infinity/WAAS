@@ -34,8 +34,10 @@ func (w *WalletModelImpl) GetWallet(walletId int) (*entity.Wallet, error) {
 func (w *WalletModelImpl) GetBalance(walletId int) (*float64, error) {
 	val, found := getBalanceRedis(walletId)
 	if found {
+		log.Println("Cache hit!")
 		return &val, nil
 	}
+	log.Println("Cache miss!")
 	wallet := &entity.Wallet{}
 	err = db.Find(&wallet, walletId).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -108,16 +110,19 @@ func (w *WalletModelImpl) WalletBalance(updateReq *view.BalanceUpdate, walletId 
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		log.Println("Record not found for Wallet ID:", walletId)
+		tx.Rollback()
 		return -1, -1, err
 	}
 	if err != nil {
 		log.Println("Cannot fetch wallet", err)
+		tx.Rollback()
 		return -1, -1, err
 	}
 
 	if wallet.IsBlocked {
 		log.Println("Cannot transact on blocked wallets")
-		return -1, -1, err
+		tx.Rollback()
+		return -1, -1, errors.New("cannot transact on blocked wallets")
 	}
 
 	transaction.Amount = updateReq.UpdateAmount
@@ -163,15 +168,10 @@ func (w *WalletModelImpl) WalletBalance(updateReq *view.BalanceUpdate, walletId 
 		return -1, -1, err
 	}
 
-	//deleteBalanceRedis(walletId) // Deleting redis entry for data consistency
-	/*
-		========================================================
-		WHAT IF CONTEXT SWITCHES HERE?
-	*/
-	// for i := 0; i < 15; i++ {
-	// 	log.Printf("%d ", i)
-	// 	time.Sleep(time.Second)
-	// }
+	for i := 0; i < 10; i++ {
+		log.Printf("%d ", i)
+		time.Sleep(time.Second)
+	}
 	if err := tx.Commit().Error; err != nil {
 		log.Println("Cannot commit transaction:", err)
 		tx.Rollback()
@@ -182,7 +182,6 @@ func (w *WalletModelImpl) WalletBalance(updateReq *view.BalanceUpdate, walletId 
 	// 	time.Sleep(time.Second)
 	// }
 
-	// context switch : getBalance
 	setBalanceRedis(walletId, wallet.Balance, 0) // Update cache with new balance
 
 	return wallet.Balance, transaction.ID, nil

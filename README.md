@@ -1,18 +1,15 @@
 # WAAS
 ------
 
-## TO DO
-- Add validation of data in all insert APIs
-- Check if username / KYC is duplicated
-- Dependency Injection 
+## Future Enhancement
+- Bloom filter to check if username is present
+- RPC architecture
+- Load data from config file
 
 ## Stack
 - gorrila-mux
 - gorm
-- ```Think something for dependency injection```
-
-## Ideas
-- Should use worker for credit/debit? : Probably no, loss of sequence
+- Manual dependency injection
 
 ## Swagger
 - swagger generate spec -o ./swagger.yaml --scan-models
@@ -34,3 +31,10 @@
 ## References
 ### Distributed locks
 - https://kylewbanks.com/blog/distributed-locks-using-golang-and-redis
+
+## Demo
+- Register User
+- Create wallet
+- Credit amount
+- Show row lock by implementing credit and block
+- Generate CSV

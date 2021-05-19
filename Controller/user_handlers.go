@@ -2,6 +2,7 @@ package Controller
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	Domain "waas/Domain"
 	DomainImpl "waas/Domain/Impl"
@@ -27,6 +28,7 @@ func (u *UserHandler) userHandler(rw http.ResponseWriter, r *http.Request) {
 			http.Error(rw, "Cannot Regsiter user", http.StatusInternalServerError)
 			return
 		}
+		log.Println("User created")
 		rw.WriteHeader(http.StatusCreated)
 	}
 

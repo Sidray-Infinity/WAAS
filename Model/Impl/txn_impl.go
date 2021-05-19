@@ -13,7 +13,6 @@ import (
 type TransactionModelImpl struct{}
 
 func (t *TransactionModelImpl) GenerateCSV() {
-	start := time.Now()
 	if err := cronMutex.Lock(); err != nil {
 		log.Println("Lock Failed:", err)
 		return
@@ -22,7 +21,7 @@ func (t *TransactionModelImpl) GenerateCSV() {
 	prevDate := time.Now().AddDate(0, 0, -1)
 
 	var transactions []entity.Transaction
-	db.Debug().Where("YEAR(`time`) = ?", prevDate.Year()).
+	db.Where("YEAR(`time`) = ?", prevDate.Year()).
 		Where("MONTH(`time`) = ?", int(prevDate.Month())).
 		Where("DAY(`time`) = ?", prevDate.Day()).
 		Preload("Wallet.User").
@@ -59,13 +58,14 @@ func (t *TransactionModelImpl) GenerateCSV() {
 			log.Println("Cannot write row to file", err)
 		}
 	}
-	// time.Sleep(10 * time.Second)
-	// log.Println("SLEEP DONE")
+	for i := 0; i < 15; i++ {
+		log.Printf("%d ", i)
+		time.Sleep(time.Second)
+	}
 
 	if ok, err := cronMutex.Unlock(); !ok || err != nil {
 		log.Println("Unlock Failed:", ok, err)
 		return
 	}
 	log.Println("`cron-mutex` lock released")
-	log.Println("Time taken:", time.Since(start))
 }
